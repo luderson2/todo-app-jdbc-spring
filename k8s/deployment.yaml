@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: todo-app
-  namespace: <NAMESPACE>
+  namespace: etudiant06-ns
 spec:
   replicas: 2
   selector:
@@ -13,9 +13,11 @@ spec:
       labels:
         app: todo-app
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: api
-          image: ghcr.io/luderson2/todo-api:<IMAGE_TAG>
+          image: ghcr.io/luderson2/todo-api:d1704bf4885c2287e0ed81f6b043b5339364fb42
           ports:
             - containerPort: 8080
           env:
