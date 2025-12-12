@@ -4,7 +4,7 @@ metadata:
   name: todo-app
   namespace: etudiant06-ns
 spec:
-  replicas: 2
+  replicas: 2  
   selector:
     matchLabels:
       app: todo-app
@@ -17,7 +17,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: api
-          image: ghcr.io/luderson2/todo-api:d1704bf4885c2287e0ed81f6b043b5339364fb42
+          image: ghcr.io/luderson2/todo-api:15fb57f9468c4d6ea138f04df1c14cce7d31266e
           ports:
             - containerPort: 8080
           env:
@@ -26,6 +26,12 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: DB_PASSWORD
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mariadb://mariadb:3306/todo?createDatabaseIfNotExist=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "user"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"
           volumeMounts:
             - name: data-storage
               mountPath: /data
