@@ -1,36 +1,29 @@
-# -------- Étape 1 : Build Maven --------
-# On utilise une image qui contient DEJA Maven (sinon la commande mvn ne marche pas)
-# Note: Si "25" n'est pas dispo, utilise "21" ou "23" qui sont les dernières stables.
-# Pour le TP, on tente une image récente.
-FROM maven:3.9-eclipse-temurin-21-alpine AS build
+# -------- Étape 1 : Build (On construit notre propre environnement) --------
+# On part d'une image qui a VRAIMENT Java 25 (version Debian/Slim plus stable que Alpine pour ça)
+FROM openjdk:25-slim AS build
 
-# Dossier de travail
+# 1. On installe Maven manuellement (car il n'est pas dans l'image Java 25)
+RUN apt-get update && apt-get install -y maven
+
 WORKDIR /build
 
-# Copie du pom.xml et du code source
+# 2. On copie les fichiers
 COPY pom.xml .
 COPY src src
 
-# On build le projet
-# (Assure-toi que ton pom.xml a bien <java.version>25</java.version>)
+# 3. On lance la compilation (Maven utilise maintenant le JDK 25 de l'image)
 RUN mvn clean package -DskipTests
 
-# -------- Étape 2 : Image finale --------
-# ATTENTION : Ici, on DOIT utiliser Java 25 (ou une version Nightly/EA)
-# Sinon ça ne pourra pas lire le code compilé au-dessus.
-FROM eclipse-temurin:25-jre-alpine-nightly
+# -------- Étape 2 : Image Finale (Exécution) --------
+# On reprend la même image Java 25 pour lancer l'appli
+FROM openjdk:25-slim
 
-# Dossier de travail
 WORKDIR /app
 
-# Copier le JAR généré depuis l'étape "build"
+# On récupère le JAR qu'on vient de fabriquer
 COPY --from=build /build/target/*.jar app.jar
 
-# Port exposé
 EXPOSE 8080
-
-# Variable d'environnement (bonne pratique)
 ENV DB_PASSWORD=""
 
-# Démarrage
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
