@@ -1,6 +1,6 @@
 package com.mariadb.todo.domain;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.Data;
 
@@ -12,5 +12,5 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String description;
-    private Boolean completed = false;
+    private Boolean completed = (Boolean) false;
 }
