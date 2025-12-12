@@ -1,5 +1,5 @@
 # -------- Étape 1 : Build Maven --------
-FROM maven:3.8.7-eclipse-temurin-17 AS build
+FROM eclipse-temurin:25-jre-alpine-nightly AS build
 
 # Dossier de travail dans le container
 WORKDIR /build
