@@ -1,26 +1,30 @@
-# -------- Étape 1 : Build (On construit notre propre environnement) --------
-# On part d'une image qui a VRAIMENT Java 25 (version Debian/Slim plus stable que Alpine pour ça)
-FROM openjdk:25-slim AS build
-
-# 1. On installe Maven manuellement (car il n'est pas dans l'image Java 25)
-RUN apt-get update && apt-get install -y maven
+# -------- Étape 1 : Build avec Java 25 --------
+# On utilise une image Early Access (EA) de Java 25
+FROM openjdk:25-ea-jdk-slim AS build
 
 WORKDIR /build
 
-# 2. On copie les fichiers
+# 1. On installe juste de quoi télécharger (pas de "apt install maven" !)
+RUN apt-get update && apt-get install -y curl tar
+
+# 2. On installe Maven manuellement pour qu'il utilise NOTRE Java 25
+ENV MAVEN_VERSION=3.9.9
+RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /opt \
+    && ln -s /opt/apache-maven-$MAVEN_VERSION /opt/maven \
+    && ln -s /opt/maven/bin/mvn /usr/bin/mvn
+
+# 3. Vérification (optionnel, pour voir dans les logs)
+RUN java -version && mvn -version
+
+# 4. Copie des fichiers et compilation
 COPY pom.xml .
 COPY src src
-
-# 3. On lance la compilation (Maven utilise maintenant le JDK 25 de l'image)
 RUN mvn clean package -DskipTests
 
-# -------- Étape 2 : Image Finale (Exécution) --------
-# On reprend la même image Java 25 pour lancer l'appli
-FROM openjdk:25-slim
+# -------- Étape 2 : Image Finale Java 25 --------
+FROM openjdk:25-ea-jdk-slim
 
 WORKDIR /app
-
-# On récupère le JAR qu'on vient de fabriquer
 COPY --from=build /build/target/*.jar app.jar
 
 EXPOSE 8080
