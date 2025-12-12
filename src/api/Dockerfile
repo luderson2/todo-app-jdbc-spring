@@ -1,28 +1,24 @@
-# -------- Étape 1 : Build (On construit notre propre environnement) --------
-# On part d'une image qui a VRAIMENT Java 25 (version Debian/Slim plus stable que Alpine pour ça)
+# -------- Étape 1 : Build Maven (Image officielle avec Java 21) --------
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
-
-# 1. On installe Maven manuellement (car il n'est pas dans l'image Java 25)
-RUN apt-get update && apt-get install -y maven
 
 WORKDIR /build
 
-# 2. On copie les fichiers
+# Copie des fichiers
 COPY pom.xml .
 COPY src src
 
-# 3. On lance la compilation (Maven utilise maintenant le JDK 25 de l'image)
+# Compilation (Maven est déjà installé dans cette image, ça ne plantera pas)
 RUN mvn clean package -DskipTests
 
-# -------- Étape 2 : Image Finale (Exécution) --------
-# On reprend la même image Java 25 pour lancer l'appli
+# -------- Étape 2 : Image Finale (Exécution sur Java 21) --------
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# On récupère le JAR qu'on vient de fabriquer
+# Récupération du JAR
 COPY --from=build /build/target/*.jar app.jar
 
+# Configuration
 EXPOSE 8080
 ENV DB_PASSWORD=""
 
